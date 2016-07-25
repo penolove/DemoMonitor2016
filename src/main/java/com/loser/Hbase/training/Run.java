@@ -15,6 +15,12 @@ public class Run {
             case "STM":
                 SparkTrafficMonitor.main(args);
                 break;
+            case "ITM":
+                InfoTrafficMonitor.main(args);
+                break;
+            case "SFC":
+                SplitFlowConsumer.main(args);
+                break;
             default:
                 throw new IllegalArgumentException("Don't know how to do " + args[0]);
         }

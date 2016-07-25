@@ -20,9 +20,21 @@ import org.apache.hadoop.hbase.client.Put;
 import java.io.IOException;
 
 public class SplitFlowConsumer {
-	public static void main(String args[]) throws IOException
+    public static void main(String args[]) throws IOException
     {
-		
+        
+        int partitioner=1;
+        int No=1;
+        int switch_rate=140;
+        if(args.length>=3){
+            partitioner=Integer.parseInt(args[1]);
+            No=Integer.parseInt(args[2]);
+        }
+
+        if(args.length>=4){
+            switch_rate=Integer.parseInt(args[3]);
+        }
+
         Configuration config = HBaseConfiguration.create();
         config.set("hbase.zookeeper.quorum","InvPM30");
         config.set("hbase.zookeeper.property.clientPort", "2181");
@@ -31,9 +43,9 @@ public class SplitFlowConsumer {
         HTable SPtable = new HTable(config, "streamsSample_spark");
         HTable INable = new HTable(config, "streamsSample_books");
         Scan scan = new Scan();
-		
         
-		//create a producer
+        
+        //create a producer
         KafkaProducer<String, String> producer;
         Properties prop_producer = new Properties();
         prop_producer.put("bootstrap.servers", "172.16.20.80:9092,172.16.20.77:9092,172.16.20.78:9092,172.16.20.79:9092,172.16.20.81:9092");
@@ -42,22 +54,24 @@ public class SplitFlowConsumer {
         prop_producer.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         prop_producer.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         prop_producer.put("block.on.buffer.full", "true");
-		producer = new KafkaProducer<>(prop_producer);
-		
-		
-		KafkaConsumer<String, String> consumer;
-		Properties prop_consumer= new Properties();
-		prop_consumer.put("bootstrap.servers","10.0.20.77:9092,10.0.20.78:9092,10.0.20.79:9092,10.0.20.80:9092,10.0.20.81:9092,10.0.20.83:9092");
-		prop_consumer.put("group.id","test");
-		prop_consumer.put("enable.auto.commit","true");
-		prop_consumer.put("key.deserializer","org.apache.kafka.common.serialization.StringDeserializer");
-		prop_consumer.put("value.deserializer","org.apache.kafka.common.serialization.StringDeserializer");
-		consumer = new KafkaConsumer<>(prop_consumer);
+        producer = new KafkaProducer<>(prop_producer);
+        
+        
+        KafkaConsumer<String, String> consumer;
+        Properties prop_consumer= new Properties();
+        prop_consumer.put("bootstrap.servers","10.0.20.77:9092,10.0.20.78:9092,10.0.20.79:9092,10.0.20.80:9092,10.0.20.81:9092,10.0.20.83:9092");
+        prop_consumer.put("group.id","test");
+        prop_consumer.put("enable.auto.commit","true");
+        prop_consumer.put("key.deserializer","org.apache.kafka.common.serialization.StringDeserializer");
+        prop_consumer.put("value.deserializer","org.apache.kafka.common.serialization.StringDeserializer");
+        consumer = new KafkaConsumer<>(prop_consumer);
 
-		consumer.subscribe(Arrays.asList("SplitResource"));
-		long timeouts=0;
-		int modd=800000;
-        double latency =0;
+        consumer.subscribe(Arrays.asList("SplitResource"));
+        long timeouts=No;
+        long timecounts=0;
+        long modd=0;
+        long timeout_back=0;
+        double latency =(System.nanoTime() * 1e-9);
         double latency1 =0;
         String[] Topicarray={"7party1","16party"};
         
@@ -74,11 +88,11 @@ public class SplitFlowConsumer {
         scan.addColumn(Bytes.toBytes("all"), Bytes.toBytes("timefirst"));
         ResultScanner scanner = table.getScanner(scan);
         for (Result result = scanner.next(); result != null; result = scanner.next()){
-        	
-        	if(tempInmax<result.raw()[0].getTimestamp()){
-        		tempInmax=result.raw()[0].getTimestamp();
-        	}
-        	
+            
+            if(tempInmax<result.raw()[0].getTimestamp()){
+                tempInmax=result.raw()[0].getTimestamp();
+            }
+            
         }
         scanner.close();
         
@@ -87,63 +101,69 @@ public class SplitFlowConsumer {
         
         
         
-		while (true) {
-	            // read records with a short timeout. If we time out, we don't really care.
-	            ConsumerRecords<String, String> records = consumer.poll(500);
-	        
-	            for (ConsumerRecord<String, String> record : records) {
-	                  timeouts++;
-	                  producer.send(new ProducerRecord<String, String>(topictemp, Long.toString(timeouts)+","+record.value()));
-	                  
-	                  
-	                  if(timeouts%1000==0){
-	                	  	if(switchterm==0){
-		                        Put p = new Put(Bytes.toBytes(Long.toString(timeouts)));
-		                        p.add(Bytes.toBytes("all"),Bytes.toBytes("timefirst"), Bytes.toBytes(Long.toString(timeouts)));
-		                        INable.put(p);
-	                	  	}else{
-		                        Put p = new Put(Bytes.toBytes(Long.toString(timeouts)));
-		                        p.add(Bytes.toBytes("all"),Bytes.toBytes("timefirst"), Bytes.toBytes(Long.toString(timeouts)));
-		                        SPtable.put(p);
-	      
-	                	  	}
+        while (true) {
+                // read records with a short timeout. If we time out, we don't really care.
+                ConsumerRecords<String, String> records = consumer.poll(500);
+            
+                for (ConsumerRecord<String, String> record : records) {
+                      timeouts+=partitioner;
+                      timecounts++;
+                      //System.out.printf("Got %d \n", timeouts );
 
-	                	  	 
-		                  if(timeouts%modd==0){
-			                  latency=(System.nanoTime() * 1e-9);
-			                  System.out.printf("Got %d records, %.1f seconds, %f k-throughput\n", timeouts , latency-latency1,modd/1000/(latency-latency1));
-			                  latency1 = latency;
-			                  throughput_temp=0;
-			                  idx=0;
-			                  scan.setTimeRange(tempInmax+1, 1472260378164L);
-			                  scan.addColumn(Bytes.toBytes("all"), Bytes.toBytes("timefirst"));
-			                  scanner = table.getScanner(scan);
-			                  for (Result result = scanner.next(); result != null; result = scanner.next()){
-			                  	idx++;
-			                  	throughput_temp+=Integer.parseInt(Bytes.toString(result.value()));
-			                  	if(tempInmax<result.raw()[0].getTimestamp()){
-			                  		tempInmax=result.raw()[0].getTimestamp();
-			                  	}
-			                  }
-			                  
-			                  scanner.close();
-			                  if(idx>0){
-				                  if(throughput_temp/idx*2>130){
-				                	  topictemp=Topicarray[1];
-				                	  switchterm=1;
-				                  }else{
-				                	  topictemp=Topicarray[0];
-				                	  switchterm=0;
-				                  }
-				                  System.out.println(throughput_temp/idx*2);
-			                  }
-			                  
-		                  }
-	                  }
-	            }
-	        
-	    }
-		
+                      producer.send(new ProducerRecord<String, String>(topictemp, Long.toString(timeouts)+","+record.value()));
+                      
+                      
+                      if(timeouts%1000==0){
+                              if(switchterm==0){
+                                Put p = new Put(Bytes.toBytes(Long.toString(timeouts)));
+                                p.add(Bytes.toBytes("all"),Bytes.toBytes("timefirst"), Bytes.toBytes(Long.toString(timeouts)));
+                                INable.put(p);
+                              }else{
+                                Put p = new Put(Bytes.toBytes(Long.toString(timeouts)));
+                                p.add(Bytes.toBytes("all"),Bytes.toBytes("timefirst"), Bytes.toBytes(Long.toString(timeouts)));
+                                SPtable.put(p);
+          
+                              }
+
+                          
+                          if(System.nanoTime() * 1e-9>=latency+9){
+                              latency=(System.nanoTime() * 1e-9);
+                              modd=timecounts-timeout_back;
+                              timeout_back=timecounts;
+
+                              System.out.printf("Got %d records, %.1f seconds, %f k-throughput\n", timeouts , latency-latency1,modd/1000/(latency-latency1));
+                              latency1 = latency;
+                              throughput_temp=0;
+                              idx=0;
+                              scan.setTimeRange(tempInmax+1, 1472260378164L);
+                              scan.addColumn(Bytes.toBytes("all"), Bytes.toBytes("timefirst"));
+                              scanner = table.getScanner(scan);
+                              for (Result result = scanner.next(); result != null; result = scanner.next()){
+                                  idx++;
+                                  throughput_temp+=Integer.parseInt(Bytes.toString(result.value()));
+                                  if(tempInmax<result.raw()[0].getTimestamp()){
+                                      tempInmax=result.raw()[0].getTimestamp();
+                                  }
+                              }
+                              
+                              scanner.close();
+                              if(idx>0){
+                                  if(throughput_temp/idx*2>switch_rate){
+                                      topictemp=Topicarray[1];
+                                      switchterm=1;
+                                  }else{
+                                      topictemp=Topicarray[0];
+                                      switchterm=0;
+                                  }
+                                  System.out.println(throughput_temp/idx*2);
+                              }
+                              
+                          }
+                      }
+                }
+            
+        }
+        
     }
 
 

@@ -119,10 +119,7 @@ public class SparkTrafficMonitor
 	        scanner.close();
 	        if(rowkey>1){
 		        System.out.printf("Input : %d k,Onput : %d k,Latency : %s ms\n",ITlength/3,OTlength/3, avgLatency.toString());
-	            producer.send(new ProducerRecord<String, String>("SparkInputrate", Integer.toString(ITlength/3)));
-	            producer.send(new ProducerRecord<String, String>("SparkOutputrate", Integer.toString(OTlength/3)));
-	            producer.send(new ProducerRecord<String, String>("SparkLatency", avgLatency.toString()));
-	            
+	            producer.send(new ProducerRecord<String, String>("RecordsSpark", Integer.toString(ITlength/3)+","+Integer.toString(OTlength/3)+","+avgLatency.toString()));
 	            Put p = new Put(Bytes.toBytes("SP"+Long.toString(rowkey)));
 	            p.add(Bytes.toBytes("all"),Bytes.toBytes("timefirst"), Bytes.toBytes(Integer.toString(ITlength/3)));
 	            tableR.put(p);
