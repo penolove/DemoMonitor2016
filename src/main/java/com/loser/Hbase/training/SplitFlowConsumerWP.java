@@ -19,20 +19,20 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.hadoop.hbase.client.Put;
 import java.io.IOException;
 
-public class SplitFlowConsumer {
+public class SplitFlowConsumerWP {
     public static void main(String args[]) throws IOException
     {
         
         int partitioner=1;
         int No=1;
-        int switch_rate=140;
+        double switch_rate=0;
         if(args.length>=3){
             partitioner=Integer.parseInt(args[1]);
             No=Integer.parseInt(args[2]);
         }
 
         if(args.length>=4){
-            switch_rate=Integer.parseInt(args[3]);
+            switch_rate=Double.parseDouble(args[3]);
         }
 
         Configuration config = HBaseConfiguration.create();
@@ -75,6 +75,7 @@ public class SplitFlowConsumer {
         long timecounts=0;
         long modd=0;
         long timeout_back=0;
+        double ranseed;
         double latency =(System.nanoTime() * 1e-9);
         double latency1 =0;
         String[] Topicarray={"7party1","16party"};
@@ -126,10 +127,19 @@ public class SplitFlowConsumer {
                                 Put p = new Put(Bytes.toBytes(Long.toString(timeouts)));
                                 p.add(Bytes.toBytes("all"),Bytes.toBytes("timefirst"), Bytes.toBytes(Long.toString(timeouts)));
                                 SPtable.put(p);
-          
                               }
 
-                          
+                              ranseed=Math.random();
+                              if(ranseed>switch_rate){
+                                  topictemp=Topicarray[1];
+                                  switchterm=1;
+                              }else{
+                                  topictemp=Topicarray[0];
+                                  switchterm=0;
+                              }
+
+
+                          /*
                           if(System.nanoTime() * 1e-9>=latency+9){
                               latency=(System.nanoTime() * 1e-9);
                               modd=timecounts-timeout_back;
@@ -149,10 +159,12 @@ public class SplitFlowConsumer {
                                       tempInmax=result.raw()[0].getTimestamp();
                                   }
                               }
-                              
+
                               scanner.close();
                               if(idx>0){
-                                  if(throughput_temp/idx*2>switch_rate){
+                            	  ranseed=Math.random();
+                            	  System.out.printf("Got seed  %f \n", ranseed);
+                                  if(ranseed>0.8){
                                       topictemp=Topicarray[1];
                                       switchterm=1;
                                   }else{
@@ -162,7 +174,7 @@ public class SplitFlowConsumer {
                                   System.out.println(throughput_temp/idx*2);
                               }
                               
-                          }
+                          }*/
                       }
                 }
             

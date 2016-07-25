@@ -18,8 +18,14 @@ public class Run {
             case "ITM":
                 InfoTrafficMonitor.main(args);
                 break;
+            case "both":
+            	monitor_both.main(args);
+                break;
             case "SFC":
                 SplitFlowConsumer.main(args);
+                break;
+            case "SFCWP":
+            	SplitFlowConsumerWP.main(args);
                 break;
             default:
                 throw new IllegalArgumentException("Don't know how to do " + args[0]);
