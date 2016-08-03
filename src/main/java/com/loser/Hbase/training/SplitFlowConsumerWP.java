@@ -138,43 +138,6 @@ public class SplitFlowConsumerWP {
                                   switchterm=0;
                               }
 
-
-                          /*
-                          if(System.nanoTime() * 1e-9>=latency+9){
-                              latency=(System.nanoTime() * 1e-9);
-                              modd=timecounts-timeout_back;
-                              timeout_back=timecounts;
-
-                              System.out.printf("Got %d records, %.1f seconds, %f k-throughput\n", timeouts , latency-latency1,modd/1000/(latency-latency1));
-                              latency1 = latency;
-                              throughput_temp=0;
-                              idx=0;
-                              scan.setTimeRange(tempInmax+1, 1472260378164L);
-                              scan.addColumn(Bytes.toBytes("all"), Bytes.toBytes("timefirst"));
-                              scanner = table.getScanner(scan);
-                              for (Result result = scanner.next(); result != null; result = scanner.next()){
-                                  idx++;
-                                  throughput_temp+=Integer.parseInt(Bytes.toString(result.value()));
-                                  if(tempInmax<result.raw()[0].getTimestamp()){
-                                      tempInmax=result.raw()[0].getTimestamp();
-                                  }
-                              }
-
-                              scanner.close();
-                              if(idx>0){
-                            	  ranseed=Math.random();
-                            	  System.out.printf("Got seed  %f \n", ranseed);
-                                  if(ranseed>0.8){
-                                      topictemp=Topicarray[1];
-                                      switchterm=1;
-                                  }else{
-                                      topictemp=Topicarray[0];
-                                      switchterm=0;
-                                  }
-                                  System.out.println(throughput_temp/idx*2);
-                              }
-                              
-                          }*/
                       }
                 }
             

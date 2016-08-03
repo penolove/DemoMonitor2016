@@ -21,6 +21,14 @@ usage:
 ./target/DemoMonitor ITM
 ```
 
+BothHbaseTrafficMonitor
+```
+trace the Hbase of Both (Hbase: streamsSample_books,streamsSample_spark)
+RecordsInfo is for UI-Demo (kafka topic : RecordsInfo)
+used to measure speed(Hbase : controlrec)
+usage:
+./target/DemoMonitor both
+```
 
 SplitFlowComsumer
 ```
@@ -34,6 +42,17 @@ usage:
 ex.
 ./target/DemoMonitor SFC 3 2
 ./target/DemoMonitor SFC 3 1
+
+```
+
+SplitFlowComsumerwithProb
+```
+Switch Flows using prob
+usage:
+./target/DemoMonitor SFC [partitioner] [# of partition] [switch_rate]
+ex.
+./target/DemoMonitor SFCWP 3 2
+./target/DemoMonitor SFCWP 3 1
 
 ```
 

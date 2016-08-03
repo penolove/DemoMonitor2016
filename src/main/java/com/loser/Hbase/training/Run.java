@@ -27,6 +27,9 @@ public class Run {
             case "SFCWP":
             	SplitFlowConsumerWP.main(args);
                 break;
+            case "SFCWProb":
+            	SplitFlowConsumerWProb.main(args);
+                break;
             default:
                 throw new IllegalArgumentException("Don't know how to do " + args[0]);
         }
