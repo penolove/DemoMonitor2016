@@ -45,8 +45,10 @@ public class monitor_both
 		prop.put("block.on.buffer.full", "true");
 		producer = new KafkaProducer<>(prop);
         
-        //variable zone        
+        //variable zone  
+		Long acc_avgLatency=0L;
         Long avgLatency=0L;
+        Long temp_lat=0L;
         long tempOutmax=0l;
         long tempInmax=0l;
         int idx2=0;
@@ -95,7 +97,10 @@ public class monitor_both
         		
 	        	idx2++;
 	        	try{
-	        		avgLatency-=(Long) recordmp.get(Bytes.toString(result.getRow()))-(Long) result.raw()[0].getTimestamp();	
+	        		temp_lat=(Long) recordmp.get(Bytes.toString(result.getRow()))-(Long) result.raw()[0].getTimestamp();
+	        		if(temp_lat<0){
+	        			avgLatency-=temp_lat;
+	        		}
 	        		latecount++;
 	        		recordmp.remove(Bytes.toString(result.getRow()));
 	        	}catch(Exception ex){
@@ -103,18 +108,20 @@ public class monitor_both
 	        	}
 	        }
 	        //System.out.printf("Input : %d ,Onput : %d ,Latency : %s \n",ITlength,OTlength, avgLatency.toString());
+	        if(rowkey!=1){
+	        	acc_avgLatency+=avgLatency;
+	        }	        
 	        if(latecount==0){
 	        	avgLatency=0L;
 	        }else{
 	        	avgLatency/=latecount;
 	        }
-	        
-	        
+
 	        OTlength=idx2;
 	        
 	        scanner.close();
 	        if(rowkey>1){
-		    System.out.printf("Input : %d k,Onput : %d k,Latency : %s ms\n",ITlength/3,OTlength/3, avgLatency.toString());
+		    System.out.printf("Input : %d k,Onput : %d k,Latency : %s ms ,acc_Latency : %s ms\n",ITlength/3,OTlength/3, avgLatency.toString(),acc_avgLatency.toString());
 	            producer.send(new ProducerRecord<String, String>("RecordsInfo", Integer.toString(ITlength/3)+","+Integer.toString(OTlength/3)+","+avgLatency.toString()));
 	            
 	            Put p = new Put(Bytes.toBytes("both"+Long.toString(rowkey)));
