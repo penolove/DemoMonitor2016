@@ -30,6 +30,15 @@ usage:
 ./target/DemoMonitor both
 ```
 
+BothTimestamptagTrafficMonitor
+```
+trace the Hbase of Both (Hbase: streamsSample_books,streamsSample_spark)
+RecordsInfo is for UI-Demo (kafka topic : RecordsInfo)
+used to measure speed(Hbase : controlrec)
+usage:
+./target/DemoMonitor both_tag
+```
+
 SplitFlowComsumer
 ```
 switch flow rate:v default is 140k/s

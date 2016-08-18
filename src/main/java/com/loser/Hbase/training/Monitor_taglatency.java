@@ -45,19 +45,21 @@ public class Monitor_taglatency {
 	        ResultScanner scanner = INable.getScanner(scan);
 	        int latency=0;
 	        int idx=0;
+	        tempInmax=System.currentTimeMillis();
 	        for (Result result = scanner.next(); result != null; result = scanner.next()){
 	        	latency+=Integer.parseInt(Bytes.toString(result.getValue(Bytes.toBytes("all"), Bytes.toBytes("timeend"))));
 	        	idx++;
 	        }
 	        
 	        if(idx>0){
-	        	System.out.printf("rows: %d,avg-latency : %d\n",idx,latency/idx);
+	        	System.out.printf("rows: %d, avg-latency : %d\n",idx,latency/idx);
 	        }else{
-	        	System.out.printf("rows: %d,avg-latency : %d\n",0,0);
+	        	System.out.printf("rows: %d, avg-latency : %d\n",0,0);
 	        }
-	        if(5000-(System.currentTimeMillis()-tempInmax)>0){
-	        	temptmep=5000-(System.currentTimeMillis()-tempInmax);
-	        	tempInmax=System.currentTimeMillis();
+	        
+	        temptmep=5000-(System.currentTimeMillis()-tempInmax);
+	        if(5000-temptmep>0){
+	        	//System.out.printf("thread to sleep : %d\n",temptmep);
 	        	Thread.sleep(temptmep);
 	        }
 	        

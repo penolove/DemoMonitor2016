@@ -30,6 +30,9 @@ public class Run {
             case "SFCWProb":
             	SplitFlowConsumerWProb.main(args);
                 break;
+            case "both_tag":
+            	Monitor_taglatency.main(args);
+            	break;
             default:
                 throw new IllegalArgumentException("Don't know how to do " + args[0]);
         }
