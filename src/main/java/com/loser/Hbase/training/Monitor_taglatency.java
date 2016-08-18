@@ -38,7 +38,9 @@ public class Monitor_taglatency {
         Scan scan = new Scan();
         long tempInmax=System.currentTimeMillis();
         long temptmep=0;
-        
+        int acclatency=0;
+        int avgacclatency=0;
+
         
         while(true){
 	        scan.setTimeRange(tempInmax, 1472260378164L);
@@ -50,11 +52,12 @@ public class Monitor_taglatency {
 	        	latency+=Integer.parseInt(Bytes.toString(result.getValue(Bytes.toBytes("all"), Bytes.toBytes("timeend"))));
 	        	idx++;
 	        }
-	        
+	        acclatency+=latency;
+	        avgacclatency+=latency/idx;
 	        if(idx>0){
-	        	System.out.printf("rows: %d, avg-latency : %d\n",idx,latency/idx);
+	        	System.out.printf("rows: %d, avg-latency : %d, acc-avglatency : %d , acc-latency: %d \n",idx,latency/idx,avgacclatency,acclatency);
 	        }else{
-	        	System.out.printf("rows: %d, avg-latency : %d\n",0,0);
+	        	System.out.printf("rows: %d, avg-latency : %d, acc-avglatency : %d , acc-latency: %d \n",0,0,avgacclatency,acclatency);
 	        }
 	        
 	        temptmep=5000-(System.currentTimeMillis()-tempInmax);
