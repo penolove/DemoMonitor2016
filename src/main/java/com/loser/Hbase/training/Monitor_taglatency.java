@@ -9,6 +9,7 @@ import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.ConnectionFactory;
+import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
@@ -35,30 +36,36 @@ public class Monitor_taglatency {
 	public static void main(String[] args) throws IOException, InterruptedException {
         TableName tableName = TableName.valueOf("streamsSample_taglatency");
 		Table INable = con.getTable(tableName); 
+        tableName = TableName.valueOf("Rec4Speed");
+		Table speedTable = con.getTable(tableName); 
         Scan scan = new Scan();
         long tempInmax=System.currentTimeMillis();
         long temptmep=0;
-        int acclatency=0;
-        int avgacclatency=0;
+        long acclatency=0;
+        long avgacclatency=0;
+        double Speed_temp=0;
 
         
         while(true){
-	        scan.setTimeRange(tempInmax, 1472260378164L);
+	        scan.setTimeRange(tempInmax, 1502260378164L);
 	        ResultScanner scanner = INable.getScanner(scan);
-	        int latency=0;
+	        long latency=0;
 	        int idx=0;
 	        tempInmax=System.currentTimeMillis();
 	        for (Result result = scanner.next(); result != null; result = scanner.next()){
-	        	latency+=Integer.parseInt(Bytes.toString(result.getValue(Bytes.toBytes("all"), Bytes.toBytes("timeend"))));
+	        	latency+=Long.parseLong(Bytes.toString(result.getValue(Bytes.toBytes("all"), Bytes.toBytes("timeend"))));
 	        	idx++;
 	        }
+            Get theGet = new Get(Bytes.toBytes("Rowkey"));
 
+            Result result =speedTable.get(theGet);
+            Speed_temp=Double.parseDouble(Bytes.toString(result.value()));
 	        if(idx>0){
 		        acclatency+=latency;
 		        avgacclatency+=latency/idx;
-	        	System.out.printf("rows: %d, avg-latency : %d, acc-avglatency : %d , acc-latency: %d \n",idx,latency/idx,avgacclatency,acclatency);
+	        	System.out.printf("Input: %f, rows: %d, avg-latency : %d, acc-avglatency : %d , acc-latency: %d \n",Speed_temp,idx,latency/idx,avgacclatency,acclatency);
 	        }else{
-	        	System.out.printf("rows: %d, avg-latency : %d, acc-avglatency : %d , acc-latency: %d \n",0,0,avgacclatency,acclatency);
+	        	System.out.printf("Input: %f, rows: %d, avg-latency : %d, acc-avglatency : %d , acc-latency: %d \n",Speed_temp,0,0,avgacclatency,acclatency);
 	        }
 	        
 	        temptmep=5000-(System.currentTimeMillis()-tempInmax);
